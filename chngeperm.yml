@@ -1,0 +1,11 @@
+---
+  - name: change permission 
+    hosts: all
+    become: yes
+
+    tasks:
+      - name: chnge perm
+        file:
+          path: /var/www/html/f1
+          mode: 0527
+

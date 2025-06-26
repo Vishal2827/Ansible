@@ -1,0 +1,10 @@
+---
+- name: delete cron
+  hosts: all
+
+  tasks:
+  - name: Modify cron job
+    cron:
+        name: Run test script
+        state: absent
+        user: ubuntu

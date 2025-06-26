@@ -1,0 +1,16 @@
+---
+- name: "first playbook"
+  hosts: web
+  become: true  # Optional: if you want to run as sudo
+  tasks:
+    - name: Test connectivity
+      ping:
+
+    - name: Print
+      debug: msg="Vishal THIS Side"
+
+    - name: COPY THE FILE
+      copy:
+        src: /var/www/html/FROM-ANISBLE-MAIN
+        dest: /var/www/html
+        backup: true

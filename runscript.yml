@@ -1,0 +1,13 @@
+---
+
+  - name: run script
+    hosts: all
+    become: yes
+
+    tasks:
+      - name:  run script
+        shell: /var/www/html/test.sh >> read.log
+        args:
+          chdir: /var/www/html/
+          creates: read.log
+

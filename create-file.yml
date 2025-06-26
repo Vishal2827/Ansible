@@ -1,0 +1,13 @@
+---
+  - name: creating a file
+    hosts: all
+    become: yes
+
+    tasks:
+    - name: Create a file with specific permissions
+      file:
+        path: /var/www/html/f1
+        state: touch
+        owner: ubuntu
+        group: ubuntu
+        mode: '0751'

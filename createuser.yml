@@ -1,0 +1,10 @@
+---
+- name: create user
+  hosts: all
+  become: yes
+  tasks: 
+  - name: creating the user 
+    user: 
+      name: vishal
+      comment: user adding for remote server from ansible
+      shell: /bin/bash

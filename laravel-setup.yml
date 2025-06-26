@@ -1,0 +1,89 @@
+---
+- name: Setup Laravel Project with Docker and Kind K8s
+  hosts: all
+  become: yes
+
+  vars:
+    repo_url: https://github.com/Vishal2827/laravel-starter.git
+    app_dir: /var/www/html/laravel-starter
+    kind_version: v0.20.0
+    kubeconfig_path: /root/.kube/config
+    k8s_namespace: laravel
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - git
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repo
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker is started
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    - name: Install Kind
+      shell: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-amd64
+        chmod +x ./kind
+        mv ./kind /usr/local/bin/kind
+      args:
+        creates: /usr/local/bin/kind
+
+    - name: Clone Laravel repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        force: yes
+
+    - name: Mark repo as safe for git
+      shell: git config --global --add safe.directory "{{ app_dir }}"
+
+    - name: Create Kind cluster with config
+      shell: |
+        kind create cluster --name laravel --config {{ app_dir }}/laravel-k8s/kind-config.yaml --wait 60s
+      args:
+        creates: "{{ kubeconfig_path }}"
+
+    - name: Ensure namespace exists
+      shell: |
+        kubectl get ns {{ k8s_namespace }} || kubectl create ns {{ k8s_namespace }}
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+
+    - name: Apply Kubernetes manifests (excluding kind-config.yaml)
+      shell: |
+        find {{ app_dir }}/laravel-k8s/ -type f -name "*.yaml" ! -name "kind-config.yaml" -exec kubectl apply -f {} \;
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"

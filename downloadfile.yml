@@ -1,0 +1,11 @@
+---
+- name: Download file
+  hosts: web
+  become: yes
+  tasks:
+    - name: downloading the file  from internet
+      get_url:
+        url: https://www.python.org/ftp/python/3.13.5/python-3.13.5-amd64.exe
+        dest: /var/www/html/
+        
+
