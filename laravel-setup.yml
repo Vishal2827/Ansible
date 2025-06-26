@@ -53,6 +53,31 @@
         groups: docker
         append: yes
 
+    # ⬇️ ADD THESE TASKS HERE (PHP + Composer)
+    - name: Install PHP and required extensions
+      apt:
+        name:
+          - php
+          - php-cli
+          - php-mbstring
+          - php-xml
+          - php-bcmath
+          - php-curl
+          - php-mysql
+          - php-zip
+          - unzip
+          - curl
+          - composer
+        state: present
+        update_cache: yes
+
+    - name: Ensure composer is available globally
+      shell: |
+        curl -sS https://getcomposer.org/installer | php
+        mv composer.phar /usr/local/bin/composer
+      args:
+        creates: /usr/local/bin/composer
+
     - name: Install Kind
       shell: |
         curl -Lo ./kind https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-amd64
@@ -93,10 +118,12 @@
 
     - name: Apply Kubernetes manifests (excluding kind-config.yaml)
       shell: |
-        find {{ app_dir }}/laravel-k8s/ -type f -name "*.yaml" ! -name "kind-config.yaml" -exec kubectl apply -f {} \;
+        find {{ app_dir }}/laravel-k8s/ \( -name "*.yaml" -o -name "*.yml" \) ! -name "kind-config.yaml" -exec kubectl apply -f {} \;
       environment:
         KUBECONFIG: "{{ kubeconfig_path }}"
 
-    - name: Print Access URL
+
+
+    - name: Print Access URL YOUR SERVERS IP :30080
       shell: |
         echo "Visit Laravel at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):30080"
