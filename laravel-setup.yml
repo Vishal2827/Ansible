@@ -76,6 +76,15 @@
       args:
         creates: "{{ kubeconfig_path }}"
 
+    - name: Install kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+      args:
+        creates: /usr/local/bin/kubectl
+
+
     - name: Ensure namespace exists
       shell: |
         kubectl get ns {{ k8s_namespace }} || kubectl create ns {{ k8s_namespace }}
@@ -87,3 +96,7 @@
         find {{ app_dir }}/laravel-k8s/ -type f -name "*.yaml" ! -name "kind-config.yaml" -exec kubectl apply -f {} \;
       environment:
         KUBECONFIG: "{{ kubeconfig_path }}"
+
+    - name: Print Access URL
+      shell: |
+        echo "Visit Laravel at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):30080"
